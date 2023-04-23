@@ -53,20 +53,26 @@ fn remove_postfix(contents: &String, flag:bool){
     
     let mut line_vec: Vec<String> = Vec::new();
 
-    
+    //A regular expression of the form (x), where x is any letter of the English alphabet
     let re = Regex::new(r"\([a-zA-Z]\)").unwrap();
     
+    //write lines to the vector where there are postfixes
     line_vec = contents.lines().filter(|x| re.is_match(x)).map(|x| x.to_string()).collect();
+
 
     if !flag{
         find_low_let(line_vec);
     }
     
+    //Deleting all postfixes
     let re = Regex::new(r"\s\([a-zA-Z]\)").unwrap();
     let mut contents = re.replace_all(&contents, "").to_string();
     let re = Regex::new(r"\([a-zA-Z]\) ").unwrap();
     contents = re.replace_all(&contents, "").to_string();
+
+    //delete the extra last commas in each line (if they exist)
     contents = contents.lines().map(|x| x.trim_end_matches(',').to_string()).collect::<Vec<String>>().join("\n");
+
     sort_and_save(contents);
 }
 
@@ -81,6 +87,7 @@ fn sort_and_save(contents: String)
     let mut fin_name = name_of_file.trim().to_string();
     let mut file_num=1;
 
+    //if such files with our name exist, then we add a digit to the end of the file name
     while Path::new(&(fin_name.clone() + ".csv")).exists()
     {
         fin_name = name_of_file.trim().to_string() + &file_num.to_string();
@@ -99,10 +106,12 @@ fn sort_and_save(contents: String)
             first_line=line;
             first=false;
             continue;
-        }
+        } //remove the row with the column names (so that they are not sorted)
         splits_vec.push(line.to_string());
     }
     splits_vec.sort();
+    
+    //returning the string with the names to the place
     splits_vec.push(first_line.to_string());
     splits_vec.rotate_right(1);
     
@@ -120,10 +129,14 @@ fn find_low_let(line_vec: Vec<String>) {
     {
         let splits: Vec<&str> = line.split("\",").collect();
         let name_with_postfix: String = splits[0].trim_matches('"').to_string();
+
+        //We look at which postfixes are in the line (with a capital or small letter) and, depending on this, we output to the console
+
         if re.is_match(&name_with_postfix)
         {
             postf_select_low(&name_with_postfix);
             println!("{}", "The prefix is written with a small letter!".to_string().red());
+            continue;
         }
         let re =Regex::new(r"\([A-Z]\)").unwrap();
         if re.is_match(&name_with_postfix)
