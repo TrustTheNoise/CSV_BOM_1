@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io;
 use std::path::Path;
 use regex::Regex;
+use std::process::exit;
 
 #[cfg(test)]
 mod tests {
@@ -14,29 +15,52 @@ mod tests {
     fn it_works() {
         let files = "example2.csv".to_string();
         let contents=fs::read_to_string(files).expect("Should have been able to read the file");
-        remove_postfix(&contents);
+        remove_postfix(&contents, false);
     }
 }
 
 fn main(){
     let args: Vec<String> = env::args().collect();
-    let file = &args[1];
+    let mut file = &String::new();
+    let mut flag = false;
+    for i in 1..args.len()
+    {
+        if args[i]=="-wo"
+        {
+            flag = true;
+            continue;
+        }
+        if args[i]=="-h"{
+            println!("This is a program for which removes all (x) postfixes from the first column of the .csv
+format table and saves the corrected table as a new file, while (if desired) writes deleted postfixes to the console.
+The program accepts a .csv file at the input and at the input we get a file with a corrected .csv format table.
+When specifying the name of the final file, the format does not need to be specified!!!!
+
+Flags:
+{} if the flag is specified, then deleted postfixes will not be output to the terminal
+
+{} outputs this message to the terminal", "-wo".to_string().yellow(), "-h".to_string().yellow());
+            exit(0);
+        }
+        file = &args[i];
+    }
     let contents=fs::read_to_string(file).expect("Should have been able to read the file");
-    remove_postfix(&contents)
+    remove_postfix(&contents, flag)
 }
 
 #[allow(unused_assignments)]
-fn remove_postfix(contents: &String){ 
+fn remove_postfix(contents: &String, flag:bool){ 
     
     let mut line_vec: Vec<String> = Vec::new();
 
-    println!("Deleted postfix:");
     
     let re = Regex::new(r"\([a-zA-Z]\)").unwrap();
     
     line_vec = contents.lines().filter(|x| re.is_match(x)).map(|x| x.to_string()).collect();
 
-    find_low_let(line_vec);
+    if !flag{
+        find_low_let(line_vec);
+    }
     
     let re = Regex::new(r"\s\([a-zA-Z]\)").unwrap();
     let mut contents = re.replace_all(&contents, "").to_string();
@@ -90,6 +114,7 @@ fn sort_and_save(contents: String)
 
 
 fn find_low_let(line_vec: Vec<String>) {
+    println!("Deleted postfix:");
     let re = Regex::new(r"\([a-z]\)").unwrap();
     for line in line_vec.iter()
     {
